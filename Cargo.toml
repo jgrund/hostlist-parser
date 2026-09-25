@@ -6,7 +6,7 @@ keywords = ["hostlist", "pdsh", "hpc", "cluster"]
 license = "MIT"
 name = "hostlist-parser"
 repository = "https://github.com/whamcloud/hostlist-parser"
-version = "0.1.6"
+version = "0.2.0"
 
 [dependencies]
 combine = "4.6"
@@ -14,3 +14,4 @@ itertools = "0.12"
 
 [dev-dependencies]
 insta = "1"
+proptest = "1.11.0"

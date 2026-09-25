@@ -2,7 +2,10 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
+mod fold;
 mod structures;
+
+pub use crate::fold::fold;
 
 use crate::structures::{flatten_ranges, Part, RangeOutput};
 use combine::{
