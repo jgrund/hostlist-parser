@@ -4,24 +4,21 @@
 
 #[derive(Debug, Clone)]
 pub(crate) enum RangeOutput {
-    Range(usize, bool, u64, u64),
-    RangeReversed(usize, bool, u64, u64),
+    Range(usize, u64, u64),
+    RangeReversed(usize, u64, u64),
     Disjoint(Vec<(usize, u64)>),
 }
 
 impl RangeOutput {
     pub(crate) fn iter(&self) -> RangeOutputIter {
         match self {
-            RangeOutput::Range(prefix, same_prefix_len, start, end) => {
-                RangeOutputIter::External(*prefix, *same_prefix_len, Box::new(*start..=*end))
+            RangeOutput::Range(zeros, start, end) => {
+                RangeOutputIter::External(token_width(*zeros, *start), Box::new(*start..=*end))
             }
-            RangeOutput::RangeReversed(prefix, same_prefix_len, end, start) => {
-                RangeOutputIter::External(
-                    *prefix,
-                    *same_prefix_len,
-                    Box::new((*end..=*start).rev()),
-                )
-            }
+            RangeOutput::RangeReversed(zeros, end, start) => RangeOutputIter::External(
+                token_width(*zeros, *end),
+                Box::new((*end..=*start).rev()),
+            ),
             RangeOutput::Disjoint(xs) => {
                 RangeOutputIter::Internal(Box::new(xs.clone().into_iter()))
             }
@@ -30,7 +27,7 @@ impl RangeOutput {
 }
 
 pub(crate) enum RangeOutputIter {
-    External(usize, bool, Box<dyn Iterator<Item = u64>>),
+    External(usize, Box<dyn Iterator<Item = u64>>),
     Internal(Box<dyn Iterator<Item = (usize, u64)>>),
 }
 
@@ -39,24 +36,18 @@ impl Iterator for RangeOutputIter {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
-            RangeOutputIter::External(prefix, same_prefix_len, xs) => xs
-                .next()
-                .map(|x| format_num_prefix(x, *prefix, *same_prefix_len)),
-            RangeOutputIter::Internal(xs) => xs
-                .next()
-                .map(|(prefix, x)| format_num_prefix(x, prefix, true)),
+            RangeOutputIter::External(width, xs) => xs.next().map(|x| format!("{x:0>width$}")),
+            RangeOutputIter::Internal(xs) => xs.next().map(|(zeros, x)| {
+                let width = token_width(zeros, x);
+
+                format!("{x:0>width$}")
+            }),
         }
     }
 }
 
-pub(crate) fn format_num_prefix(num: u64, prefix: usize, same_prefix_len: bool) -> String {
-    let width = if same_prefix_len {
-        prefix + num.to_string().len()
-    } else {
-        prefix + 1
-    };
-
-    format!("{num:0>width$}")
+fn token_width(zeros: usize, num: u64) -> usize {
+    zeros + num.to_string().len()
 }
 
 #[derive(Debug, Clone)]
@@ -85,9 +76,7 @@ mod tests {
 
     #[test]
     fn test_range_output_range_iter() {
-        assert_debug_snapshot!(RangeOutput::Range(3, false, 1, 10)
-            .iter()
-            .collect::<Vec<_>>());
+        assert_debug_snapshot!(RangeOutput::Range(3, 1, 10).iter().collect::<Vec<_>>());
     }
 
     #[test]

@@ -6,7 +6,6 @@ Ok(
     (
         RangeReversed(
             0,
-            true,
             0,
             100,
         ),

@@ -106,20 +106,15 @@ where
         optional_spaces().with(leading_zeros()),
     ))
     .and_then(|((start_zeros, start), _, (end_zeros, end))| {
-        let mut xs = [start, end];
-        xs.sort_unstable();
-
-        let same_prefix_len = start_zeros == end_zeros;
-
         let (range, start_zeros, end_zeros) = if start > end {
             (
-                RangeOutput::RangeReversed(end_zeros, same_prefix_len, end, start),
+                RangeOutput::RangeReversed(end_zeros, end, start),
                 end_zeros,
                 start_zeros,
             )
         } else {
             (
-                RangeOutput::Range(start_zeros, same_prefix_len, start, end),
+                RangeOutput::Range(start_zeros, start, end),
                 start_zeros,
                 end_zeros,
             )
@@ -254,7 +249,7 @@ pub fn parse(input: &str) -> Result<Vec<String>, combine::stream::easy::Errors<c
 mod tests {
     use super::*;
     use combine::parser::EasyParser;
-    use insta::assert_debug_snapshot;
+    use insta::{assert_debug_snapshot, assert_snapshot};
 
     #[test]
     fn test_leading_zeros() {
@@ -485,6 +480,18 @@ mod tests {
         let xs = parse("atla-pio-03-o[048-051],atla-pio-05-o[052-055],atla-pio-07-o[056-059],atla-pio-09-o[060-063],atla-pio-11-o[064-067],atla-pio-13-o[068-071],atla-pip-03-o[072-075],atla-pip-05-o[076-079],atla-pip-07-o[080-083],atla-pip-11-o[088-091],atla-pip-13-o[092-095],atla-pip-09-o[085,087],atla-piq-03-o[096-099],atla-piq-05-o[100-103],atla-piq-07-o[104-107],atla-piq-09-o[108-111],atla-piq-11-o[112-115],atla-piq-13-o[116-119],atla-pir-03-o[120-123],atla-pir-05-o[124-127],atla-pir-07-o[128-131],atla-pir-09-o[132-135],atla-pir-11-o[136-139],atla-pir-13-o[140-143],atla-pis-03-m[000-003],atla-pis-05-o[000-003],atla-pis-07-o[004-007],atla-pis-09-o[008-011],atla-pis-11-o[012-015],atla-pis-13-o[016-019],atla-pis-15-o[020-023],atla-pit-03-m[004-007],atla-pit-05-o[024-027],atla-pit-07-o[028-031],atla-pit-09-o[032-035],atla-pit-11-o[036-039],atla-pit-15-o[044-047],atla-pit-13-o[040,042]").unwrap();
 
         assert_debug_snapshot!("Large expression", xs);
+    }
+
+    fn ends(input: &str) -> String {
+        let xs = parse(input).unwrap();
+
+        format!("{:?} {:?} {}", &xs[..3], &xs[xs.len() - 2..], xs.len())
+    }
+
+    #[test]
+    fn test_padded_range_keeps_start_width() {
+        assert_snapshot!(ends("n[010-100]"), @r#"["n010", "n011", "n012"] ["n099", "n100"] 91"#);
+        assert_snapshot!(ends("n[0010-0100]"), @r#"["n0010", "n0011", "n0012"] ["n0099", "n0100"] 91"#);
     }
 
     #[test]
