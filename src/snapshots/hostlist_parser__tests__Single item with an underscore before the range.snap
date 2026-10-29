@@ -1,0 +1,10 @@
+---
+source: src/lib.rs
+expression: "parse(\"lustre1_mdt[0000-0001]\")"
+---
+Ok(
+    [
+        "lustre1_mdt0000",
+        "lustre1_mdt0001",
+    ],
+)

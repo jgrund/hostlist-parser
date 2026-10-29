@@ -69,7 +69,7 @@ where
     I: Stream<Token = char>,
     I::Error: ParseError<I::Token, I::Range, I::Position>,
 {
-    many1(alpha_num().or(dash()).or(token('.')))
+    many1(alpha_num().or(dash()).or(token('.')).or(token('_')))
 }
 
 fn digits<I>() -> impl Parser<I, Output = String>
@@ -407,6 +407,11 @@ mod tests {
         assert_debug_snapshot!(
             "Single item with single range and additional characters after range",
             parse("hostname[0-3]-eth0.iml.com")
+        );
+
+        assert_debug_snapshot!(
+            "Single item with an underscore before the range",
+            parse("lustre1_mdt[0000-0001]")
         );
 
         assert_debug_snapshot!(
